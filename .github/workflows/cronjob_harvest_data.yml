@@ -1,0 +1,14 @@
+#this workflow will trigger each day and on push 
+name: Harvest Data
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  echo_job_started:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo job started
+        run: echo "Job started"
