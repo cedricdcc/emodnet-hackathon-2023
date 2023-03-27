@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import Navigation from "../components/navbar";
 import ReactFileReader from "react-file-reader";
 import { convertData } from "../utils/handle-upload";
-import CSVTable from "../components/csvtable";
+import CsvFile from "../components/csvFile";
 import $ from "jquery";
 
 export default function Upload() {
 
     const [data, setData] = useState("");
+    const [csvString, setCsvString] = useState("");
     console.log(data);
     const handleFiles = (files) => {
         let reader = new FileReader();
@@ -17,6 +18,7 @@ export default function Upload() {
             // Use reader.result
             //console.log(reader.result);
             setData(convertData(reader.result));
+            setCsvString(reader.result);
             //when the data is uploaded, the class of the upload button will change to show that the data is uploaded
             $(".upload").addClass("upload-success");
             //change text to show that the data is uploaded
@@ -34,7 +36,7 @@ export default function Upload() {
                 <button className='upload'>Upload</button>
             </ReactFileReader>
             <h3>Uploaded data</h3>
-            {data && <CSVTable data={data} />}
+            {data && <CsvFile data={csvString} />}
         </div>
     );
 };
