@@ -7,6 +7,11 @@ import time
 import os
 
 radius_used = 250
+startdate = "2015-01-01"
+enddate = "2020-12-14"
+min_depth = 3 # TODO figure out with metadata of api call what all the different depth values are
+max_depth = 3
+
 #load in the csv file that is located in ../data/rayscan.csv relative to this script
 csv_file =  os.path.join(os.path.dirname(__file__), '../data/rayscan.csv')
 species_aphiaid = [
@@ -90,7 +95,7 @@ for ray in species_aphiaid:
         "max_lon": max_lon,
         "aphiaid": ray['aphiaid']
     })
-
+'''
 for ray in speciesbbox:
     print(ray)
     #get deph data and occurence data
@@ -110,7 +115,7 @@ for ray in speciesbbox:
         json.dump(occurence_data.json(), outfile)
     
     time.sleep(3)      
-
+'''
 '''
 #foreach ray in all_rayscan_data get the depth data    
 all_depth_data = []
@@ -133,3 +138,45 @@ for ray in all_rayscan_data:
 with open(os.path.join(os.path.dirname(__file__), '../data/output/all_depth_data.json'), 'w') as outfile:
     json.dump(all_depth_data, outfile)
 '''
+
+#https://erddap.emodnet-physics.eu/erddap/griddap/INSITU_GLO_TS_OA_REP_OBSERVATIONS_013_002_b_TEMP.json?TEMP_PCTVAR%5B(1990-01-15T00:00:00.000Z):1:(2020-12-15T00:00:00.000Z)%5D%5B(1040):1:(1260)%5D%5B(56.86113551250406):1:(58.737384055147714)%5D%5B(0.9140157739689023):1:(2.452539578936701)%5D%2CTEMP_ERR%5B(1990-01-15T00:00:00.000Z):1:(2020-12-15T00:00:00.000Z)%5D%5B(1040):1:(1260)%5D%5B(56.86113551250406):1:(58.737384055147714)%5D%5B(0.9140157739689023):1:(2.452539578936701)%5D%2CTEMP%5B(1990-01-15T00:00:00.000Z):1:(2020-12-15T00:00:00.000Z)%5D%5B(1040):1:(1260)%5D%5B(56.86113551250406):1:(58.737384055147714)%5D%5B(0.9140157739689023):1:(2.452539578936701)%5D
+#1040 is min depth => 1260 is max depth
+
+def getTempTemporalGeoloaction(startdate,enddate,latitude,longitude,min_depth,max_depth):
+    #get the data from the erddap server
+    url = "https://erddap.emodnet-physics.eu/erddap/griddap/INSITU_GLO_TS_OA_REP_OBSERVATIONS_013_002_b_TEMP.json?TEMP_PCTVAR%5B(" + startdate + "T00:00:00.000Z):1:(" + enddate + "T00:00:00.000Z)%5D%5B(" + str(min_depth) + "):1:(" + str(max_depth) + ")%5D%5B(" + str(latitude) + "):1:(" + str(latitude) + ")%5D%5B(" + str(longitude) + "):1:(" + str(longitude) + ")%5D%2CTEMP_ERR%5B(" + startdate + "T00:00:00.000Z):1:(" + enddate + "T00:00:00.000Z)%5D%5B(" + str(min_depth) + "):1:(" + str(max_depth) + ")%5D%5B(" + str(latitude) + "):1:(" + str(latitude) + ")%5D%5B(" + str(longitude) + "):1:(" + str(longitude) + ")%5D%2CTEMP%5B(" + startdate + "T00:00:00.000Z):1:(" + enddate + "T00:00:00.000Z)%5D%5B(" + str(min_depth) + "):1:(" + str(max_depth) + ")%5D%5B(" + str(latitude) + "):1:(" + str(latitude) + ")%5D%5B(" + str(longitude) + "):1:(" + str(longitude) + ")%5D"
+    print(url)
+    temp_data = requests.get(url)
+    print(temp_data)
+    return temp_data
+
+all_temp_data = []
+for ray in all_rayscan_data:
+    #read in the all_temp_data.json
+    with open(os.path.join(os.path.dirname(__file__), '../data/output/all_temp_data.json'), 'r') as outfile:
+        all_current_temp_data = json.load(outfile)
+    #get the lat and lon
+    lat = float(ray['lat'])
+    lon = float(ray['lon'])
+    #get the temp data 
+    temp_data = getTempTemporalGeoloaction(startdate, enddate, lat, lon, min_depth, max_depth)
+    all_current_temp_data.append({
+        "name": ray['label'],
+        "rayscan_id": ray['rayscan_id'],
+        "lat": lat,
+        "lon": lon,
+        "depth": temp_data.json()
+    })
+    #print a statement when 10% of the data is collected
+    x = 10
+    if len(all_temp_data) % 10 == 0:
+        print(str(x) + "% of the data is collected")
+        x += 10
+    
+    time.sleep(3)
+
+    #save the data to a json file
+    with open(os.path.join(os.path.dirname(__file__), '../data/output/all_temp_data.json'), 'w') as outfile:
+        json.dump(all_current_temp_data, outfile)
+
+#https://emodnet.ec.europa.eu/geoviewer/proxy//https://drive.emodnet-geology.eu/geoserver/wms?service=wfs&request=GetFeature&version=2.0.0&outputFormat=shape-zip&typeName=gtk%3Aseabed_substrate_1m%2Cgtk%3Aseabed_substrate_250k%2Cgtk%3Aseabed_substrate_100k%2Cgtk%3Aseabed_substrate_70k_multiscale%2Cgtk%3Aseabed_substrate_60k_multiscale%2Cgtk%3Aseabed_substrate_50k_multiscale%2Cgtk%3Aseabed_substrate_45k_multiscale%2Cgtk%3Aseabed_substrate_30k_multiscale%2Cgtk%3Aseabed_substrate_25k_multiscale%2Cgtk%3Aseabed_substrate_20k_multiscale%2Cgtk%3Aseabed_substrate_15k_multiscale%2Cgtk%3Aseabed_substrate_10k_multiscale%2Cgtk%3Aseabed_substrate_5k_multiscale%2Cgtk%3Aseabed_substrate_1k5_multiscale&cql_filter=1%3D1+AND+BBOX%28geom%2C54.5721122904788%2C3.0154141417297957%2C54.984886969860405%2C3.052939112582667%2C%27urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A4326%27%29&srsname=EPSG%3A4326
