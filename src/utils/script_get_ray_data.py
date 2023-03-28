@@ -1,6 +1,5 @@
 #this script will get the ray data from the rayscan.csv file
 #//the csv frile is in ./data/rayscan.csv
-
 import csv
 import json
 import requests
@@ -8,7 +7,6 @@ import time
 import os
 
 radius_used = 250
-
 #load in the csv file that is located in ../data/rayscan.csv relative to this script
 csv_file =  os.path.join(os.path.dirname(__file__), '../data/rayscan.csv')
 species_aphiaid = [
@@ -22,7 +20,7 @@ species_aphiaid = [
 
 def getDepthData(lat, lon):
     base_uri = "https://rest.emodnet-bathymetry.eu/depth_sample"
-    geom = "POINT(" + str(lon) + "%20" + str(lat) + ")"
+    geom = "POINT(" + str(lon) + " " + str(lat) + ")"
     depth_data = requests.get(base_uri, params={'geom': geom})
     return depth_data
 
@@ -111,4 +109,27 @@ for ray in speciesbbox:
     with open(os.path.join(os.path.dirname(__file__), '../data/output/' + ray['name'] + '_' + str(ray['min_lat']) + '_' + str(ray['min_lon']) + '_' + str(ray['max_lat']) + '_' + str(ray['max_lon']) + '_' + str(radius_used) + '_km_radius.json'), 'w') as outfile:
         json.dump(occurence_data.json(), outfile)
     
-    time.sleep(3)            
+    time.sleep(3)      
+
+'''
+#foreach ray in all_rayscan_data get the depth data    
+all_depth_data = []
+for ray in all_rayscan_data:
+    #get the lat and lon
+    lat = float(ray['lat'])
+    lon = float(ray['lon'])
+    #get the depth data
+    depth_data = getDepthData(lat, lon)
+    all_depth_data.append({
+        "name": ray['label'],
+        "rayscan_id": ray['rayscan_id'],
+        "lat": lat,
+        "lon": lon,
+        "depth": depth_data.json()
+    })
+    time.sleep(3)
+
+#write the json data of the all_depth_data to a file in ..data/output/all_depth_data.json
+with open(os.path.join(os.path.dirname(__file__), '../data/output/all_depth_data.json'), 'w') as outfile:
+    json.dump(all_depth_data, outfile)
+'''
