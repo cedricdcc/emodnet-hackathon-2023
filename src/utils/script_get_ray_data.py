@@ -7,6 +7,8 @@ import requests
 import time
 import os
 
+radius_used = 250
+
 #load in the csv file that is located in ../data/rayscan.csv relative to this script
 csv_file =  os.path.join(os.path.dirname(__file__), '../data/rayscan.csv')
 species_aphiaid = [
@@ -101,12 +103,12 @@ for ray in speciesbbox:
     print(center_bbox_lat)
     print(center_bbox_lon)
     depth_data = getDepthData(center_bbox_lat, center_bbox_lon)
-    occurence_data = getSpeciesOccurences(ray['min_lat'], ray['max_lon'], ray['aphiaid'], 100)
+    occurence_data = getSpeciesOccurences(ray['min_lat'], ray['max_lon'], ray['aphiaid'], radius_used)
     print(depth_data)
     print(occurence_data)
     
     #write the json data of the occurence_data to a file in ..data/output/{speciesname}_{min_lat}_{min_lon}.json
-    with open(os.path.join(os.path.dirname(__file__), '../data/output/' + ray['name'] + '_' + str(ray['min_lat']) + '_' + str(ray['min_lon']) + '.json'), 'w') as outfile:
+    with open(os.path.join(os.path.dirname(__file__), '../data/output/' + ray['name'] + '_' + str(ray['min_lat']) + '_' + str(ray['min_lon']) + '_' + str(ray['max_lat']) + '_' + str(ray['max_lon']) + '_' + str(radius_used) + '_km_radius.json'), 'w') as outfile:
         json.dump(occurence_data.json(), outfile)
     
     time.sleep(3)            
